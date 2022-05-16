@@ -10,8 +10,8 @@
 </template>
 
 <script>
-const fileContext = require.context("../../music/", false, /\.mp3/);
-const list = fileContext.keys().map(i => i.replace('./', '').replace('.mp3', ''))
+// const fileContext = require.context("../../music/", false, /\.mp3/);
+// const list = fileContext.keys().map(i => i.replace('./', '').replace('.mp3', ''))
 import axios from 'axios'
 import { player } from "../player"; // player 播放器
 import bus from '../bus'
@@ -20,7 +20,7 @@ export default {
   props: {},
   data() {
     return {
-      list,
+      list: [],
       player,
     };
   },
@@ -35,14 +35,23 @@ export default {
     this.$nextTick(() => {
       bus.$emit('list', this.list)
     })
-    this.list.forEach(n => {
-      axios.get('api/' + n + '.mp3', {responseType:'blob'}).then(res => {
-        // console.log('res.data->', res.data);
-        player.append(res.data); //将音乐添加到 播放器中
-      })
-    });
+
+    this.loadList()
+    
   },
   methods: {
+    loadList() {
+      axios.get('api/allMusic').then(res => {
+        this.list = res.data.data.map(i => i.replace('.mp3', ''))
+        this.loadMusicBlob()
+      })
+    },
+    loadMusicBlob() {
+      this.list.forEach(async n => {
+        const res = await axios.get('api/' + n + '.mp3', {responseType:'blob'})
+        player.append(res.data); //将音乐添加到 播放器中
+      });
+    },
     onClick(item, idx) {
       player.stop();
       player.play(idx)
