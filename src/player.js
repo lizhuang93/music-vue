@@ -108,20 +108,27 @@ class Player {
   }
 
   // 将node存放至 playerList 里
-  async append(file) {
+  async append(file, index) {
+   
     /* 
      由于追加曲目可以在 播放过程中追加，也可以在播放之前追加
      所以要先检测 当前是否为 空node，如果为空node，则表示还没有曲目，那么要换图片
      如果不为空，那么就不用换图片
     */
-    const isEmpty = this.isEmpty;
-    this.playList.push({
+    const data = {
       file,
       offset: 0,
       start: null,
       source: null,
       buffer: await this.getBuffer(file),
-    });
+    }
+    const isEmpty = this.isEmpty;
+    if (index >= 0) {
+      this.playList[index] = data
+    } else {
+      this.playList.push(data);
+    }
+    
 
     if (isEmpty) {
       this.onReady.emit();

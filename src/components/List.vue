@@ -1,11 +1,12 @@
 <template>
   <div class="list">
-     <section>
+     <section v-if="isShowList">
       <div class="item" :class="{red: idx === activeIndex}" v-for="(item, idx) in list" :key="idx" @click="onClick(item, idx)">
         <p>{{idx + 1}}. {{item}}</p>
       </div>
       
     </section>
+    <div v-else class="loading">正在读取音乐,请稍等...</div>
   </div>
 </template>
 
@@ -20,6 +21,7 @@ export default {
   props: {},
   data() {
     return {
+      isShowList: false,
       list: [],
       player,
     };
@@ -46,11 +48,19 @@ export default {
         this.loadMusicBlob()
       })
     },
-    loadMusicBlob() {
-      this.list.forEach(async n => {
-        const res = await axios.get('api/' + n + '.mp3', {responseType:'blob'})
-        player.append(res.data); //将音乐添加到 播放器中
-      });
+    async loadMusicBlob() {
+      
+      Promise.all(this.list.map(n => {
+        return axios.get('api/' + n + '.mp3', {responseType:'blob'})
+      })).then(async resArr => {
+        resArr.forEach((res, idx) => {
+          player.append(res.data, idx)
+        })
+        
+      }).then(() => {
+        console.log('done');
+        this.isShowList = true
+      })
     },
     onClick(item, idx) {
       player.stop();
@@ -72,5 +82,8 @@ export default {
 .red, .item:hover {
   color: red;
 }
-
+.loading {
+  text-align: center;
+  padding-top: 10px;
+}
 </style>
